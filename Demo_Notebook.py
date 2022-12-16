@@ -45,7 +45,7 @@ ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict)
 # The next cell visualizes the h-index from one snapshot. The cell below that shows how you can visualize the growth of your h-index through time in a richer context than the time series above.
 
 # %%
-#Here, instead of creating an axes indident in the function and returning it, we create the axes first and 
+#Here, instead of creating an axes incident in the function and returning it, we create the axes first and 
 #then populate it with information from the snapshot. This makes more sense in the plot below, but we start
 #with this one first.
 
