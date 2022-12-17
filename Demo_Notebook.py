@@ -53,3 +53,4 @@ year_of_snapshot = '20220117'
 fig, h_ax = plt.subplots(nrows=1, ncols=1)
 
 PubPy.plot_Hirsch(pubs_dict, fig, h_ax, year_of_snapshot, cmap='inferno')
+
