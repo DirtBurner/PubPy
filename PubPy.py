@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 
 def get_publication_data(file):
     pubs_dict = pd.read_excel(file, sheet_name=None)
@@ -38,7 +39,7 @@ def calculate_H_index(data):
 
     return h, sorted_data
 
-def h_index_time_series(pubs_dict):
+def h_index_time_series(pubs_dict, prediction=None):
     '''
     This function generates a time series by calculating the h-index from every dataframe in the pubs_dict, a dictionary
     in which each value is a dataframe of publication information from your publication snapshot. 
@@ -48,6 +49,15 @@ def h_index_time_series(pubs_dict):
             The dictionary output from get_publication_data. Each key is the date code (str, YYYYMMDD) of the publication and 
             citation snapshot from each sheet in your excel workbook, and the values are the DataFrames loaded from those
             corresponding sheets.
+        prediction (string)
+            file name (including directory) of any file that you have h-index predictive data in. The
+            prediction calculator I used in 2013, Acuna, Allesino, and Kording 2012 (Nature) no longer
+            seems to exist except in someone's R code. I may try to reproduce it here in the future, 
+            but there may be other ways to find a predictor and hence I leave this option as a keyword
+            argument. You need not enter this argument - the routine will still work. Columns must be
+            Year | h-index spelled as such, and file must be .csv. Extra columns simply won't be analyzed.
+            Obviously, the best way to use this feature is to rename my example file and enter your data.
+            Also, data can be fictitious - i.e. based on your hopes and goals. 
 
     Outputs:
         ts_df (dataframe) 
@@ -57,6 +67,18 @@ def h_index_time_series(pubs_dict):
 
     '''
 
+    #Determine how plotting will work depending on the inclusion of a prediciton or not. Default is 
+    #`Rosenheim_AAK_forecast_2013.csv` which works for my example data.
+    if prediction:
+        print('Including predictive data for comparison to snapshot data. Leave keyword argument out of function call if you do not want predictive data shown.')
+        line_style = 'None'
+        prediction_data = pd.read_csv(prediction)
+        legend_list = ['Google scholar data', 'Prediction']
+        years_datetime = pd.to_datetime(prediction_data['Year'], format='%Y')
+    else:
+        print('No predictive data entered, plotting only snapshot data.')
+        line_style = '-'
+        legend_list = ['Google scholar data']
     #Create time series dataframe with dates and h-indices from each date, start with empty lists 
     #for each column.
     date_list = []
@@ -69,12 +91,12 @@ def h_index_time_series(pubs_dict):
 
     ts_df = pd.DataFrame({'Date':date_list, 'h-index':h_list})
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)
+    _, ax = plt.subplots(nrows=1, ncols=1)
 
     ax.plot(
         ts_df['Date'],
         ts_df['h-index'],
-        linestyle='-',
+        linestyle=line_style,
         mfc='lightblue',
         marker='d',
         mec='k',
@@ -82,9 +104,24 @@ def h_index_time_series(pubs_dict):
         markersize=15
     )
 
+    #Add prediction if present:
+    if prediction:
+        ax.plot(
+            years_datetime,
+            prediction_data['h-index'],
+            linestyle='-',
+            color='k'            
+        )
+
     ax.set(xlabel='Date', ylabel='h-index')
     ax.xaxis.get_label().set_fontsize(16)
     ax.yaxis.get_label().set_fontsize(16)
+    font = matplotlib.font_manager.FontProperties(
+        family='arial',
+        size=14        
+    )
+
+    ax.legend(legend_list, prop=font)
 
     return ts_df, ax
 

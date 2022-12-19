@@ -32,10 +32,14 @@ print('H-index for ', pubs_snapshot_list[-1], ' = ', h)
 # %% [markdown]
 # ## Generate Time Series of H-Index
 #
-# Calculating an h-index is redundant with what Google Scholar already tells you, but you can now go back and see what your h-index was in previous years from previous snapshots. The next cell shows you a timeseries of your h-index, which is good to compare to h-index predictions like the [Acuna, Allesina, and Kording (2012) method](https://www.nature.com/articles/489201a#Sec1). There is a variable for the axes handles returned by this function if you wish to add a predition for comparison.
+# Calculating an h-index is redundant with what Google Scholar already tells you, but you can now go back and see what your h-index was in previous years from previous snapshots. The next cell shows you a timeseries of your h-index, which is good to compare to h-index predictions like the [Acuna, Allesina, and Kording (2012) method](https://www.nature.com/articles/489201a#Sec1)$^1$. There is a variable for the axes handles returned by this function if you wish to add a predition for comparison. 
+#
+# $^1$ There used to be a calculator linked to this article. As of December 2022, it was no longer functioning. Other studies of the h-index which are more recent are also more complex and seem to not produce a calculator for individual predictions. If you cannot find a prediction, this is also a good space to put your own forecast in to a .csv file formatted like `Rosenheim_AAK_forecast_2013.csv`. Over the years following your own prediction/wish, you can see how it is playing out. 
 
 # %%
-ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict)
+ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict, prediction='Rosenheim_AAK_forecast_2013.csv')
+
+
 
 # %% [markdown]
 # ## Visualize the H-Index
@@ -49,8 +53,8 @@ ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict)
 #then populate it with information from the snapshot. This makes more sense in the plot below, but we start
 #with this one first.
 
-year_of_snapshot = '20220117'
+snapshot = '20220117'
 fig, h_ax = plt.subplots(nrows=1, ncols=1)
 
-PubPy.plot_Hirsch(pubs_dict, fig, h_ax, year_of_snapshot, cmap='inferno')
+PubPy.plot_Hirsch(pubs_dict, fig, h_ax, snapshot, cmap='inferno')
 
