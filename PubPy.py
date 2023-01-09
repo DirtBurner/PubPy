@@ -256,9 +256,10 @@ def quad_Hirsch_trim(fig, axs, pubs_dict, hirsch_plot, year, h, year_list):
         pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::7]
     
 
+    rangex = max(limits['x']) - min(limits['x'])
     for ind, axes in enumerate(axs.flatten()):
-        axes.text(abs(1.7*min(limits['x'])), 0.85*max(limits['y']), 'H-index = '+str(h[ind])+',', fontdict=h_index_annotation_dict)
-        axes.text(abs(1.7*min(limits['x'])), 0.7*max(limits['y']), year[ind][4:6]+'/'+year[ind][6::]+'/'+year[ind][:4], fontdict=date_annotation_dict)
+        axes.text(abs(0.17*rangex+min(limits['x'])), 0.85*max(limits['y']), 'H-index = '+str(h[ind])+',', fontdict=h_index_annotation_dict)
+        axes.text(abs(0.17*rangex+min(limits['x'])), 0.7*max(limits['y']), year[ind][4:6]+'/'+year[ind][6::]+'/'+year[ind][:4], fontdict=date_annotation_dict)
         #Tick mark labels
         if ind < 2:
             axes.set_xticklabels([''])
