@@ -17,6 +17,9 @@ This package plots the Hirsch plot that allows to understand which papers are "h
 ### Hirsch Plot Evolution
 It is good to see how your h-index has changed through time. This can be done with a simple time series of your data snapshots, which I encourage you to compare to an h-index calculator. Additionally, you can construct paneled plots of your detailed Hirsch bubble plots to show how your h-index is involving. Is it involving simply because you are publishing more papers and citing yourself, or is it because your papers have started to have a large impact on your field indicated by heavy citations? Or is it both? One thing is certain: *You cannot change your h-index without publishing!*
 
+![](Hirsch_Plot_4Panel_Example.png)
+**Figure 2** *Evolution of Hirsch plots from Brad Rosenheim, google scholar data taken periodically between 2013 and 2023. The data are displayed in the same way as in **Figure 1**, however there is only one colorbar and its range is shared by all 4 subplots.*
+
 ### Using this Toolbox
 There is a template that called `Demo_Notebook.py`. This is designed to be accessed either through your favorite Python workspace or as a Jupyter notebook using `Jupytext`. I recommend using it as a Jupyter notebook with Jupytext. I recommend the following steps: 
 1. You should work through this notebook which is based on google scholar shapshots from my profile between 2013 and 2022. 

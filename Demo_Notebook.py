@@ -62,7 +62,7 @@ PubPy.h_index_panels(pubs_dict, snapshots, color_map='plasma')
 #To save this plot, change the file name and add a directory path to the line below. You can also change
 #the type of file by changing the extension.
 
-#plt.savefig('Hirsch_Plot_Example_20220117.png')
+plt.savefig('Hirsch_Plot_Example_20220117.png')
 
 
 # %% [markdown]
@@ -80,3 +80,5 @@ fig, axes, h = PubPy.h_index_panels(pubs_dict, snapshots, 'plasma')
 #directory = 'my_computer/my_directory/filename.ext'
 
 #plt.savefig(directory)
+
+# %%
