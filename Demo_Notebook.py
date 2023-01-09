@@ -53,8 +53,24 @@ ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict, prediction='Rosenheim_AAK_fo
 #then populate it with information from the snapshot. This makes more sense in the plot below, but we start
 #with this one first.
 
-snapshot = '20220117'
-fig, h_ax = plt.subplots(nrows=1, ncols=1)
+snapshots = ['20220117']   #This is the snapshot that I want to plot, and it corresponds to the date code of
+                        #the sheet in my excel workbook. This should be changed if you want to view
+                        #different years or snapshots of your data.
 
-PubPy.plot_Hirsch(pubs_dict, fig, h_ax, snapshot, cmap='inferno')
+PubPy.h_index_panels(pubs_dict, snapshots, color_map='plasma')
 
+
+# %% [markdown]
+# ## H-Index Comparison
+# After an initial snapshot of Google Scholar data, your h-index will grow. It is useful, then, to compare Hirsch plots. The following cell constructs a panel figure with several Hirsch plots, as above, except that they all share one color bar for ease of interpretation. This portrayal of your snapshots is far more nuanced than a simple time series of your h-index as displayed above. 
+
+# %%
+#Note that I add more than 4 snapshots here, but the message generated prior to the plot explains which 4 of 5 will be plotted.
+snapshots = ['20130301','20160201','20200106','20230101', '20220117']
+
+fig, axes, h = PubPy.h_index_panels(pubs_dict, snapshots, 'plasma')
+
+#To save the figure, delete the # before the new two lines of code and change your directory to an actual directory in your file tree, 
+# and replace the leters ext with an extension that defines the file type you wish to save to (.jpg, .svg, .png, .pdf, etc.):
+#directory = 'my_computer/my_directory/filename.ext'
+#plt.savefig(directory)

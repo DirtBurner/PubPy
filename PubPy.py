@@ -1,6 +1,25 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
+
+print('[][*][][*][][*][][*][]][*][][*][][*][][*][][*][][*]')
+print('PubPy - Tracking your "progress" better than your administrators are.')
+
+#Font dictionaries to set up different output styles 
+axis_label_dict = {
+    'fontfamily':'arial',
+    'fontsize':16
+}
+date_annotation_dict = {
+    'fontfamily':'arial',
+    'fontsize':14
+}
+h_index_annotation_dict = {
+    'fontfamily':'arial',
+    'fontsize':14,
+    'fontstyle':'italic'
+}
 
 def get_publication_data(file):
     pubs_dict = pd.read_excel(file, sheet_name=None)
@@ -126,7 +145,7 @@ def h_index_time_series(pubs_dict, prediction=None):
     return ts_df, ax
 
 
-def plot_Hirsch(data, fig, axis, year, cmap='inferno'):
+def plot_Hirsch(data, fig, axis, year, cbar_limits, cmap='inferno'):
     '''
     Plots individual Hirsch plot into defined matplotlib axis
 
@@ -145,39 +164,120 @@ def plot_Hirsch(data, fig, axis, year, cmap='inferno'):
             Year passed in from the iterations through the dictionary of sheets in the excel spreadsheet 
             containing the data. For each plot, this year should correspond to the first 4 characters of the 
             strings (YYYYMMDD) that denote the sheets of the excel worksheet.
-        cmap (colormap, default viridis)
+        cbar_limits (tuple): The high and low publication year limits for the entire batch of data being plotted in 
+            this and subsequent calls to this function - there needs to be a universal limit for when this function
+            is called in a loop with different years' data.
+        cmap (colormap, default inferno)
             The color map of the Hirsch plot
 
     '''
     h, sorted_data = calculate_H_index(data[year])
     year_num = int(year[:4])
-    annotation_dict = {'family':'arial', 'size':14}
-
+    
     hirsch_plot = axis.scatter(
         sorted_data.index,
         sorted_data['Citations'],
         c=sorted_data['Year'],
         cmap=cmap,
-        vmin=min(sorted_data['Year']),
-        vmax=max(sorted_data['Year']), 
+        vmin=cbar_limits[0],
+        vmax=cbar_limits[1], 
         s=25*(sorted_data['Citations']+5)/(year_num-sorted_data['Year']+1),
         marker='o',
         edgecolor='k'
     )
+
     axis.plot(sorted_data.index, sorted_data.index, color='k')
-    axis.set(xlabel='Rank (Descending order of citations)', ylabel='Citations')
-    axis.xaxis.get_label().set_fontsize(16)
-    axis.yaxis.get_label().set_fontsize(16)
-    axis.xaxis.get_label().set_fontname('Arial')
-    axis.yaxis.get_label().set_fontname('Arial')
-    ylimits = axis.get_ylim()
-    xlimits = axis.get_xlim()
-    axis.text(0.5*max(xlimits), 0.75*max(ylimits),'H-index = '+str(h)+',\n '+year[4:6]+'/'+year[6::]+'/'+year[:4], fontdict=annotation_dict)    
-    cbar = fig.colorbar(hirsch_plot, shrink=0.95)
-    cbar.ax.set_ylabel(ylabel='Year published', fontfamily='arial', fontsize=16)
+    
     
 
     return h, hirsch_plot
+
+def single_Hirsch_trim(fig, axs, hirsch_plot, year, h):
+    '''
+    This routine sets axis labels, color bar, color bar labels, and annotations for a single 
+    Hirsch plot. This is separated from the function plot_Hirsch because that function plots
+    only bare-bones plots for the double and quad plots that are available. Formatting for
+    those plots is found in double_Hirsch_trim and quad_Hirsch_trim, respectively. 
+
+    Inputs:
+        fig: (matplotlib figure handle) figure handle for the figure that you are working with
+        axis: (matplotlib axes handle) axes handle for the figure axes you are working with
+        hirsch_plot: (matplotlib axes handle): axes handle for the plotted Hirsch plot
+        year: (integer): Year of snapshot, taken as the first four digits of the snapshot
+            string from the excel workbook, specified in the wrapper call. 
+        h: (integer): The h-index calculated from the plotting routine, passed through
+    '''
+
+    axs.set(xlabel='Rank (Descending order of citations)', ylabel='Citations')
+    axs.xaxis.get_label().set_fontsize(16)
+    axs.yaxis.get_label().set_fontsize(16)
+    axs.xaxis.get_label().set_fontname('Arial')
+    axs.yaxis.get_label().set_fontname('Arial')
+    ylimits = axs.get_ylim()
+    xlimits = axs.get_xlim()
+    axs.text(0.5*max(xlimits), 0.75*max(ylimits),'H-index = '+str(h)+',\n ', fontdict=h_index_annotation_dict)
+    axs.text(0.5*max(xlimits), 0.65*max(ylimits), year[4:6]+'/'+year[6::]+'/'+year[:4], fontdict=date_annotation_dict)    
+    cbar = fig.colorbar(hirsch_plot, shrink=0.95)
+    cbar.ax.set_ylabel(ylabel='Year published', fontdict=axis_label_dict)
+
+
+def quad_Hirsch_trim(fig, axs, pubs_dict, hirsch_plot, year, h, year_list):
+    '''
+    This routine sets axis labels, color bar, color bar labels, and annotations for a quad panel 
+    Hirsch plot. This is separated from the function plot_Hirsch because that function plots
+    only bare-bones plots for the double and quad plots that are available. Formatting for
+    those plots is found in double_Hirsch_trim and quad_Hirsch_trim, respectively. 
+
+    Inputs:
+        fig: (matplotlib figure handle) figure handle for the figure that you are working with
+        axis: (matplotlib axes handle) axes handle for the figure axes you are working with
+        hirsch_plot: (matplotlib axes handle): axes handle for the plotted Hirsch plot
+        year: (integer): Year of snapshot, taken as the first four digits of the snapshot
+            string from the excel workbook, specified in the wrapper call. 
+        h: (integer): The h-index calculated from the plotting routine, passed through
+        pubs_dict (dictionary): data from input spreadsheet
+    '''
+
+    limits = adjust_subplot_axes(axs, axis='both')
+    pub_year_lims = pub_year_limits(pubs_dict, year_list)
+    pub_year_range = pub_year_lims[1] - pub_year_lims[0]
+    #Decide how may colorbar ticks to create by determining the time between limits.
+    if pub_year_range <= 6:
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))
+    if (pub_year_range > 6) and (pub_year_range <= 12):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::2]
+    if (pub_year_range > 12) and (pub_year_range <= 24):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::3]
+    if (pub_year_range > 24) and (pub_year_range <= 36):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::4]
+    if (pub_year_range > 36) and (pub_year_range <= 50):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::5]
+    if (pub_year_range > 50):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::7]
+    
+
+    for ind, axes in enumerate(axs.flatten()):
+        axes.text(abs(1.7*min(limits['x'])), 0.85*max(limits['y']), 'H-index = '+str(h[ind])+',', fontdict=h_index_annotation_dict)
+        axes.text(abs(1.7*min(limits['x'])), 0.7*max(limits['y']), year[ind][4:6]+'/'+year[ind][6::]+'/'+year[ind][:4], fontdict=date_annotation_dict)
+        #Tick mark labels
+        if ind < 2:
+            axes.set_xticklabels([''])
+        if ind % 2 != 0:
+            axes.set_yticklabels([''])
+    
+    #Add big bounding axis for a single set of y- and x-labels:
+
+    big_ax = fig.add_subplot(111, frameon=False)
+    plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
+    big_ax.set_xlabel(xlabel='Publication rank, descending citations', fontdict=axis_label_dict)
+    big_ax.set_ylabel(ylabel='Citations', fontdict=axis_label_dict)
+
+    cbar = fig.colorbar(hirsch_plot, ax=axs.ravel().tolist(), shrink=0.95)
+    year_list = [int(entry[:4]) for entry in year]
+    cbar.set_ticks(pub_year_list)
+    cbar.ax.set_ylabel(ylabel='Year published', fontdict=axis_label_dict)
+
+
 
 def axis_limit_search(lims, min_max_axis):
     '''
@@ -234,3 +334,96 @@ def adjust_subplot_axes(axes, axis='x'):
     
     return lims_dict
 
+def h_index_panels(pubs_dict, snapshots_list, color_map='inferno'):
+    '''
+    Main wrapper function that the end user calls. This function takes user inputs central 
+    to desired output - which years to plot, what font styles to use, and what color map.
+    The function then decides how many axes to create in the figure, creates the figure and
+    and the axes, plots the data in each axes, resizes the axes and adjusts the colorbar, and 
+    informs the user of its choices with print commands.
+
+    Inputs:
+        snapshots_list: (list) a list containing at least one datecode lalbel from the excel 
+            spreadsheet workbook. Function uses the size of this list to determine how 
+            many axes to create (1, 2, or 4) and decides which snapshots to plot if the list
+            contains a different number than 1, 2, or 4 snapshsot datecodes.
+        color_map (string): a python color map for plots
+
+    Outputs:
+        fig: (pyplot figure handle): the figure handle in which all axes are plotted
+        axs: (pyplot axes handles): the axes handles for the panel axes
+    '''
+
+    #Check if listed snapshots are in the keys of the pubs_dict; only work with those which are.
+    keys_list = pubs_dict.keys()
+    good_list = [snap for snap in snapshots_list if snap in keys_list]
+    cbar_limits = pub_year_limits(pubs_dict, good_list)
+    
+    #Plot bubble plots and print information messages depending on the length of snapshots_list
+    if len(good_list) == 1:
+        print('Plotting a single h-index bubble plot...')
+        print('Compatible snapshots: ', good_list)
+        #Create figure and axes for plot:
+        fig, axs = plt.subplots(nrows=1, ncols=1)
+        h, hirsch_plot = plot_Hirsch(pubs_dict, fig, axs, snapshots_list[0], cbar_limits, cmap=color_map)
+        single_Hirsch_trim(fig, axs, hirsch_plot, snapshots_list[0], h)
+
+    if len(good_list) > 1:
+        print('Attempting to plot 4-panel h-index evolution bubble plot...')
+        if len(good_list) > 4:
+            print('Detected more than 4 snapshot years in your list. Plotting the first four...')
+            snaps = good_list[:4]
+            print('Compatible snapshots: ', snaps)
+            fig, axs, h = create_4panel_plot_trim(snaps, pubs_dict, snapshots_list, cbar_limits, color_map)
+        if len(good_list) < 4:
+            print('Detected fewer than 4 snapshot years in your snapshot list; plotting ONLY the first one...')
+            print('Compatible snapshots: ', good_list)
+            fig, axs = plt.subplots(nrows=1, ncols=1)
+            h, hirsch_plot = plot_Hirsch(pubs_dict, fig, axs, snapshots_list[0], cbar_limits, color_map)
+            single_Hirsch_trim(fig, axs, hirsch_plot, snapshots_list[0], h)
+        if len(good_list) == 4: #When there are 4 entries in snapshot list...
+            print('Exactly 4 snapshots in list, plotting 4-panel plot.')
+            print('Compatible snapshots: ', good_list)
+            snaps = good_list
+            fig, axs, h = create_4panel_plot_trim(snaps, pubs_dict, snapshots_list, cbar_limits, color_map)
+    if len(good_list) == 0:
+        print('List of citations snapshots is empty! Please fill the list, checking for transcription errors, and rerun code!')
+
+    return fig, axs, h
+
+def create_4panel_plot_trim(snaps, pubs_dict, year_list, cbar_limits, color_map):
+    fig, axs = plt.subplots(nrows=2, ncols=2)
+    h, hirsch_plot = [], []
+    for ind, snap in enumerate(snaps):
+        h_temp, hirsch_plot_temp = plot_Hirsch(pubs_dict, fig, axs.flatten()[ind], snap, cbar_limits, color_map)
+        h.append(h_temp)
+        hirsch_plot.append(hirsch_plot_temp)
+    quad_Hirsch_trim(fig, axs, pubs_dict, hirsch_plot_temp, snaps, h, year_list)
+    return fig, axs, h
+
+def pub_year_limits(pubs_dict, year_list):
+    '''
+    Finds maximum and minimum years of publication to set the limits of color bars in multi-panel
+    plots.
+
+        Inputs: 
+            pubs_dict (dictionary): dicionary of data input worksheet (as dataframes) from loading
+                excel data into routine. Keys are date codes (YYYYMMDD) and values are dataframes.
+        Outputs:
+            pub_year_limits (tuple): min and max years of publications in the pubs_dict. Uused to 
+                establsh the colorbar range and ticks in multipanel plots.
+    '''
+    new_dict = {}
+    for year in year_list:
+        if year in pubs_dict.keys():
+            new_dict |= {year:pubs_dict[year]}
+
+    min_years = []
+    max_years = []
+    for _, v in new_dict.items():
+        min_year, max_year = min(v.Year), max(v.Year)
+        min_years.append(min_year)
+        max_years.append(max_year)
+
+    pub_year_limits = (min(min_years), max(max_years))
+    return pub_year_limits
