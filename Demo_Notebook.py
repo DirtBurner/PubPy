@@ -59,6 +59,11 @@ snapshots = ['20220117']   #This is the snapshot that I want to plot, and it cor
 
 PubPy.h_index_panels(pubs_dict, snapshots, color_map='plasma')
 
+#To save this plot, change the file name and add a directory path to the line below. You can also change
+#the type of file by changing the extension.
+
+#plt.savefig('Hirsch_Plot_Example_20220117.png')
+
 
 # %% [markdown]
 # ## H-Index Comparison
@@ -73,4 +78,5 @@ fig, axes, h = PubPy.h_index_panels(pubs_dict, snapshots, 'plasma')
 #To save the figure, delete the # before the new two lines of code and change your directory to an actual directory in your file tree, 
 # and replace the leters ext with an extension that defines the file type you wish to save to (.jpg, .svg, .png, .pdf, etc.):
 #directory = 'my_computer/my_directory/filename.ext'
+
 #plt.savefig(directory)

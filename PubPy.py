@@ -219,6 +219,7 @@ def single_Hirsch_trim(fig, axs, hirsch_plot, year, h):
     axs.text(0.5*max(xlimits), 0.65*max(ylimits), year[4:6]+'/'+year[6::]+'/'+year[:4], fontdict=date_annotation_dict)    
     cbar = fig.colorbar(hirsch_plot, shrink=0.95)
     cbar.ax.set_ylabel(ylabel='Year published', fontdict=axis_label_dict)
+    plt.figure(facecolor='white')
 
 
 def quad_Hirsch_trim(fig, axs, pubs_dict, hirsch_plot, year, h, year_list):
