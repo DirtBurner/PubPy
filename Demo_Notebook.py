@@ -40,7 +40,6 @@ print('H-index for ', pubs_snapshot_list[-1], ' = ', h)
 ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict, prediction='Rosenheim_AAK_forecast_2013.csv')
 
 
-
 # %% [markdown]
 # ## Visualize the H-Index
 #

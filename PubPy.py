@@ -110,7 +110,7 @@ def h_index_time_series(pubs_dict, prediction=None):
 
     ts_df = pd.DataFrame({'Date':date_list, 'h-index':h_list})
 
-    _, ax = plt.subplots(nrows=1, ncols=1)
+    fig, ax = plt.subplots(nrows=1, ncols=1)
 
     ax.plot(
         ts_df['Date'],
@@ -139,7 +139,7 @@ def h_index_time_series(pubs_dict, prediction=None):
         family='arial',
         size=14        
     )
-
+    fig.patch.set_facecolor('white')
     ax.legend(legend_list, prop=font)
 
     return ts_df, ax
