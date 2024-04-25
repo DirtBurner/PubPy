@@ -1,3 +1,2 @@
+work/**
 *.ipynb
-*.pyc
-__pycache__/

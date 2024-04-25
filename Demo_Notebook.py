@@ -52,11 +52,11 @@ ts_df, ts_ax = PubPy.h_index_time_series(pubs_dict, prediction='Rosenheim_AAK_fo
 #then populate it with information from the snapshot. This makes more sense in the plot below, but we start
 #with this one first.
 
-snapshots = ['20220117']   #This is the snapshot that I want to plot, and it corresponds to the date code of
+snapshots = ['20240425']   #This is the snapshot that I want to plot, and it corresponds to the date code of
                         #the sheet in my excel workbook. This should be changed if you want to view
                         #different years or snapshots of your data.
 
-PubPy.h_index_panels(pubs_dict, snapshots, color_map='plasma')
+PubPy.h_index_panels(pubs_dict, snapshots, color_map='inferno')
 
 #To save this plot, change the file name and add a directory path to the line below. You can also change
 #the type of file by changing the extension.
@@ -70,7 +70,7 @@ plt.savefig('Hirsch_Plot_Example_20220117.png')
 
 # %%
 #Note that I add more than 4 snapshots here, but the message generated prior to the plot explains which 4 of 5 will be plotted.
-snapshots = ['20130301','20160201','20200106','20230101', '20220117']
+snapshots = ['20130301','20160201','20200106','20240425', '20250117']
 
 fig, axes, h = PubPy.h_index_panels(pubs_dict, snapshots, 'plasma')
 
@@ -80,4 +80,26 @@ fig, axes, h = PubPy.h_index_panels(pubs_dict, snapshots, 'plasma')
 
 #plt.savefig(directory)
 
+# %% [markdown]
+# ## Automatic Import of Publication Metric Data from Google Scholar
+#
+# I was informed that it is possible to import publication data automatically through the scholarly package. I have managed to use this with some people, but it does not work for other. For instance, the example below imports data from my Google scholar profile, but some of the keys of the imported data are not populated with data or simply not present. *This is a work in progress...*
+
 # %%
+from scholarly import scholarly
+import pandas as pd
+
+# Retrieve the author's data, fill-in, and print
+# Get an iterator for the author results
+search_query = scholarly.search_author('Brad Rosenheim')
+author = scholarly.fill(next(search_query))
+
+# Grab the pub title, year, and number of citations
+print(author['publications'][70]['bib']['pub_year'])
+titles = [pub['bib']['title'] for pub in author['publications']]
+years = [pub['bib']['pub_year'] for pub in author['publications']]
+cites = [pub['num_citations'] for pub in author['publications']]
+
+data = pd.DataFrame(data = {'year': years, 'title': titles, 'num_cites': cites})
+data 
+
