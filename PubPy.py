@@ -21,6 +21,13 @@ h_index_annotation_dict = {
     'fontstyle':'italic'
 }
 
+DEBUG = False   #Default - this can be toggled from a notebook or another call of this package
+
+def debug(*args):
+    if DEBUG == True:
+        print(args)
+
+
 def get_publication_data(file):
     pubs_dict = pd.read_excel(file, sheet_name=None)
     pubs_snapshot_list = list(pubs_dict.keys())
@@ -145,7 +152,7 @@ def h_index_time_series(pubs_dict, prediction=None):
     return ts_df, ax
 
 
-def plot_Hirsch(data, fig, axis, year, cbar_limits, cmap='inferno'):
+def plot_Hirsch(data, axis, year, cbar_limits, cmap='inferno'):
     '''
     Plots individual Hirsch plot into defined matplotlib axis
 
@@ -191,6 +198,198 @@ def plot_Hirsch(data, fig, axis, year, cbar_limits, cmap='inferno'):
     
 
     return h, hirsch_plot
+
+def limits_search(good_list, pubs_dict):
+    '''
+    This replaces axis_limits_search, which used the get_xlim and get_ylim functions AFTER generation of a subplot.
+    This function will rely on the data used to make the plot, allowing the subplots to all be created with known
+    limits on either axes. This makes annotation and formating much easier. 
+
+        Inputs:
+            good_list (list of strings): list of YYYYMMDD codes referring to tabs in spreadsheet. These are the tabs
+                that will compile the plot (max 4). Therefore, these are the publication dfs that matter for determining
+                the axes and colorbar limits.
+            pubs_dict (dictionary of dataframes): The dictionary that is created by reading the spreadsheet tabs. This 
+                has all of the data, but the only the data with keys in good_list will be used because only that will
+                be plotted. 
+    '''
+    for m, year in enumerate(good_list):
+        pubs = pubs_dict[year]
+        lims_dict = {}
+
+        x_max = len(pubs['Year'])
+        y_max = 10*(np.ceil(max(pubs['Citations'])/10))
+        
+        if m == 0:
+            min_max_x = [-2, x_max]
+            min_max_y = [-20, y_max]
+        else:
+            if x_max >= min_max_x[1]:
+                min_max_x = [-2, x_max]  #Write new values to the max x limit only if it is bigger in the next year
+            if y_max >= min_max_y[1]:
+                min_max_y = [-20, y_max]
+
+    #Get color bar limits from existing function:
+    cbar_limits = pub_year_limits(pubs_dict, good_list)
+
+    #Make dict for x and y limits:
+    lims_dict |= {'x':min_max_x, 'y':min_max_y}
+        
+    return lims_dict, cbar_limits
+
+def pub_year_colorbar_ticks(pub_year_lims):
+    '''
+    This function determines the amount of years to label the color bar y-axis with. This ensures that
+    years are whole numbers and that the axis is not too crowded (max 7 divisions).
+
+        Inputs:
+            pub_year_lims (tuple): minimum and maximum from publication years, from pub_year_limits output
+        Outputs:
+            pub_year_list (list): list of years to use as tick mark labels on color bar axis.
+    
+    '''
+    
+    #Decide how may colorbar ticks to create by determining the time between limits.
+    debug('Limits of publication years are in format: ', pub_year_lims)
+    pub_year_range = max(pub_year_lims) - min(pub_year_lims)
+    debug('Publication year range: ', pub_year_range)
+
+    if pub_year_range <= 6:
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))
+    if (pub_year_range > 6) and (pub_year_range <= 12):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::2]
+    if (pub_year_range > 12) and (pub_year_range <= 24):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::3]
+    if (pub_year_range > 24) and (pub_year_range <= 36):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::4]
+    if (pub_year_range > 36) and (pub_year_range <= 50):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::5]
+    if (pub_year_range > 50):
+        pub_year_list = list(range(pub_year_lims[0], pub_year_lims[1]))[::7]
+
+    return pub_year_list
+
+def determine_subplots(year_list):
+    '''
+    This function determines the necessary alignment of subplots for plotting the data in a dictionary of publication
+    metric data. The routine simply takes the list of years to plot and determines the alignment of up to 
+    4 subplot panels. 
+
+        Inputs:
+            year_list (list): the list of years to be plotted. This starts as the list of keys from the pubs_dict
+                (output of get_publication_data), but is modified if a user specifies a different list of years
+                and/or if the list is over 4 in length. 
+        Outputs:
+            axes (list): list of axes information for subplots. 
+
+    '''
+
+    aa = len(year_list)
+
+    if aa <= 1:
+        ax1 = plt.subplot2grid(shape=(4,4), loc=(0, 0), colspan=4, rowspan=4)
+        axes = [ax1]
+    elif aa == 2:
+        ax1 = plt.subplot2grid(shape=(4,4), loc=(0, 0), colspan=2, rowspan=4)
+        ax2 = plt.subplot2grid(shape=(4,4), loc=(0, 2), colspan=2, rowspan=4)
+        axes = [ax1, ax2]
+    elif aa == 3:
+        ax1 = plt.subplot2grid(shape=(4,4), loc=(0, 0), rowspan=2, colspan=2 )
+        ax2 = plt.subplot2grid(shape=(4,4), loc=(0, 2), rowspan=2, colspan=2 )
+        ax3 = plt.subplot2grid(shape=(4,4), loc=(2, 1), rowspan=2, colspan=2 )
+        axes = [ax1, ax2, ax3]
+    elif aa >= 4:
+        ax1 = plt.subplot2grid(shape=(4,4), loc=(0, 0), colspan=2, rowspan=2)
+        ax2 = plt.subplot2grid(shape=(4,4), loc=(0, 2), colspan=2, rowspan=2)
+        ax3 = plt.subplot2grid(shape=(4,4), loc=(2, 0), colspan=2, rowspan=2)
+        ax4 = plt.subplot2grid(shape=(4,4), loc=(2, 2), colspan=2, rowspan=2)
+        axes = [ax1, ax2, ax3, ax4]
+
+    return axes
+
+
+def Hirsch_panels_auto(pubs_dict, year_list=None, color_map='plasma'):
+    '''
+    This function takes the loaded data from pubs_dict and constructs a panel plot with up to 4 panels. If there are 
+    more than 4 years in the pubs_dict, then it selects a sub-list of 4 years, including the latest one, and roughly 
+    evenly spaced. If this is not desirable, a user can specify a list of years that they specifically would like to 
+    populate the panels with. 
+
+        Inputs: 
+            pubs_dict (dictionary): This is the output of get_publication_data. Publication data can either be pulled 
+                from an Excel workbook where the worksheets are citations and publicaitons from a given data pulled 
+                from Google scholar (original method), or by using the auto_populate function (UNDER DEVELOPMENT)
+                to create the necessary data structure for functions in this package. 
+            year_list (keyword argument, list of 8 digit strings YYYYMMDD): User can supply a list of specific years 
+                to populate the panels with. The list is automatically checked to make sure that the entries match
+                the list of dictionary keys in pubs_dict. 
+            color_map (string, python matplotlib colormaps): default: plasma. User can change color map if desired.
+    
+    '''
+
+    #Check whether a list is given:
+    keys_list = list(pubs_dict.keys())
+    debug('Years from the pubs_dict are: ', keys_list)
+    if year_list:
+        good_list = [snap for snap in year_list if snap in keys_list]
+        debug('Using ', year_list, ' to search for compatible years in ', keys_list)
+        message0 = ['Year list is specified, pared down requested keys of pubs_dict to: ', good_list]
+        if len(good_list) < len(year_list):
+            message1 = ['Only found: ', good_list, ' in the publications data years uploaded.']
+        else:
+            message1 = 'Specified list matches publications data years.'
+    else:
+        good_list = keys_list
+        message0 = 'Working with list of years in original dataset...'
+        message1 = ''
+
+    #If the list is longer than 4, pare list to 4:
+    if len(good_list) > 4:
+        ind = int(np.ceil(len(good_list)/4))
+        good_list = good_list[::-ind][::-1]
+        message2 = ['List of years shortened to 4: ', good_list, ' to fit graph. Please specify 4 specific years as "year_list" if you wish to plot different years than this selection.']
+    else:
+        message2 = ''
+
+    print(message0, '\n', message1, '\n', message2)
+
+    #Configure the axes and limits:
+    fig = plt.figure()
+    fig.set_figheight(6)
+    fig.set_figwidth(6)
+    axes = determine_subplots(good_list)
+    good_dict = {key:pubs_dict[key] for key in good_list}
+    debug(good_dict.keys())
+    lims_dict, cbar_lims = limits_search(good_list, good_dict)
+    xlimits = lims_dict['x']
+    ylimits = lims_dict['y']
+    pub_year_list = pub_year_colorbar_ticks(cbar_lims)
+
+    #Now plot the years in the list:
+    for j, snap in enumerate(good_dict.keys()):
+        debug(j, snap)
+        h, hirsch = plot_Hirsch(pubs_dict, axes[j], snap, pub_year_limits(pubs_dict, good_list), cmap=color_map)
+        axes[j].set_ylim(ylimits)
+        axes[j].set_xlim(xlimits)
+        axes[j].text(0.3*max(xlimits), 0.75*max(ylimits),'H-index = '+str(h)+',\n ', fontdict=h_index_annotation_dict)
+        axes[j].text(0.3*max(xlimits), 0.65*max(ylimits), snap[4:6]+'/'+snap[6::]+'/'+snap[:4], fontdict=date_annotation_dict)
+    plt.tight_layout()  #Must do tightlayout prior to fitting big axes and color bar, or else the color bar prints over axes.
+
+    #Add big bounding axis for a single set of y- and x-labels:
+    big_ax = fig.add_subplot(111, frameon=False)
+    plt.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
+    big_ax.set_xlabel(xlabel='Publication rank, descending citations', fontdict=axis_label_dict)
+    big_ax.set_ylabel(ylabel='Citations', fontdict=axis_label_dict)
+
+    cbar = fig.colorbar(hirsch, ax=axes, shrink=0.95)
+    year_list = [int(entry[:4]) for entry in good_list]
+    cbar.set_ticks(pub_year_list)
+    cbar.ax.set_ylabel(ylabel='Year published', fontdict=axis_label_dict)
+    fig.patch.set_facecolor('white')  
+
+
+
+
 
 def single_Hirsch_trim(fig, axs, hirsch_plot, year, h):
     '''
@@ -316,7 +515,11 @@ def adjust_subplot_axes(axes, axis='x'):
     min_max_x = [0,0]
     min_max_y = [0,0]
 
-    for ax in axes.flatten():
+    if isinstance(axes,np.ndarray):
+        debug('Changing axes array into a list of axes.')
+        axes = axes.flatten()
+
+    for ax in axes:
         if (axis == 'x') | (axis == 'both'):
             lims = ax.get_xlim()
             min_max_x = axis_limit_search(lims, min_max_x)
@@ -330,10 +533,10 @@ def adjust_subplot_axes(axes, axis='x'):
 
     for k, v in lims_dict.items():
         if k == 'x':
-            for lims in axes.flatten():
+            for lims in axes:
                 lims.set_xlim(v)
         if k == 'y':
-            for lims in axes.flatten():
+            for lims in axes:
                 lims.set_ylim(v)
     
     return lims_dict
@@ -361,6 +564,7 @@ def h_index_panels(pubs_dict, snapshots_list, color_map='inferno'):
     #Check if listed snapshots are in the keys of the pubs_dict; only work with those which are.
     keys_list = pubs_dict.keys()
     good_list = [snap for snap in snapshots_list if snap in keys_list]
+    debug('Good List = ', good_list)
     cbar_limits = pub_year_limits(pubs_dict, good_list)
     
     #Plot bubble plots and print information messages depending on the length of snapshots_list
@@ -369,7 +573,7 @@ def h_index_panels(pubs_dict, snapshots_list, color_map='inferno'):
         print('Compatible snapshots: ', good_list)
         #Create figure and axes for plot:
         fig, axs = plt.subplots(nrows=1, ncols=1)
-        h, hirsch_plot = plot_Hirsch(pubs_dict, fig, axs, snapshots_list[0], cbar_limits, cmap=color_map)
+        h, hirsch_plot = plot_Hirsch(pubs_dict, axs, snapshots_list[0], cbar_limits, cmap=color_map)
         single_Hirsch_trim(fig, axs, hirsch_plot, snapshots_list[0], h)
 
     if len(good_list) > 1:
@@ -383,7 +587,7 @@ def h_index_panels(pubs_dict, snapshots_list, color_map='inferno'):
             print('Detected fewer than 4 snapshot years in your snapshot list; plotting ONLY the first one...')
             print('Compatible snapshots: ', good_list)
             fig, axs = plt.subplots(nrows=1, ncols=1)
-            h, hirsch_plot = plot_Hirsch(pubs_dict, fig, axs, snapshots_list[0], cbar_limits, color_map)
+            h, hirsch_plot = plot_Hirsch(pubs_dict, axs, snapshots_list[0], cbar_limits, cmap=color_map)
             single_Hirsch_trim(fig, axs, hirsch_plot, snapshots_list[0], h)
         if len(good_list) == 4: #When there are 4 entries in snapshot list...
             print('Exactly 4 snapshots in list, plotting 4-panel plot.')
@@ -399,7 +603,7 @@ def create_4panel_plot_trim(snaps, pubs_dict, year_list, cbar_limits, color_map)
     fig, axs = plt.subplots(nrows=2, ncols=2)
     h, hirsch_plot = [], []
     for ind, snap in enumerate(snaps):
-        h_temp, hirsch_plot_temp = plot_Hirsch(pubs_dict, fig, axs.flatten()[ind], snap, cbar_limits, color_map)
+        h_temp, hirsch_plot_temp = plot_Hirsch(pubs_dict, fig, axs.flatten()[ind], snap, cbar_limits, cmap=color_map)
         h.append(h_temp)
         hirsch_plot.append(hirsch_plot_temp)
     quad_Hirsch_trim(fig, axs, pubs_dict, hirsch_plot_temp, snaps, h, year_list)
