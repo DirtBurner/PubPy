@@ -21,12 +21,14 @@ It is good to see how your h-index has changed through time. This can be done wi
 **Figure 2** *Evolution of Hirsch plots from Brad Rosenheim, google scholar data taken periodically between 2013 and 2023. The data are displayed in the same way as in **Figure 1**, however there is only one colorbar and its range is shared by all 4 subplots.*
 
 ![](Time_Series_and_Prediction.png)
-**Figure 3** *Evolution of h-index values from Brad Rosenheim, google scholar data taken periodically between 2013 and 2023. This plots the h-index calculated from the bubble plots above and plots them on date. There is an option for a prediction and I used the calculator based on an article by [Acuna, Allesina, and Kording (2012)](https://www.nature.com/articles/489201a#Sec1) in Nature. This article no longer links to the calculation, though, so in place you can make your own goals and include them in the same format as my prediction calculation.*
+**Figure 3** *Evolution of h-index values from Brad Rosenheim, google scholar data taken periodically between 2013 and 2023. This plots the h-index calculated from the bubble plots above and plots them on date. There is an option for a prediction and I used the calculator based on an article by [Acuna, Allesina, and Kording (2012)](https://www.nature.com/articles/489201a#Sec1) in Nature. This article no longer links to the calculation, though, so in place you can make your own goals and include them in the same format as this prediction calculation.*
 
 ### Using this Toolbox
 There is a template that called `Demo_Notebook.py`. This is designed to be accessed either through your favorite Python workspace or as a Jupyter notebook using `Jupytext`. I recommend using it as a Jupyter notebook with Jupytext. I recommend the following steps: 
 1. You should work through this notebook which is based on google scholar shapshots from my profile between 2013 and 2022. 
 2. You should create your own spreadsheet based off of `H_Index_Rosenheim_Demo.xlsx` by replacing my data with yours. Currently this needs to be done manually. 
-3. Save a copy of the Demo Jupyter Notebook with a new file name and change the file name to direct it at your google scholar snapshot data. Make a tab for each snapshot at whichever frequency you think it is important. 
+3. Save a copy of the Demo Jupyter Notebook with a new file name and change the file name to direct it to your google scholar snapshot data. Make a tab for each snapshot at whichever frequency you think it is important (every year is good, but some may want to do it more frequently, for instance for a mid tenure review.). 
 4. After a few years, you will be ready to discuss your H-Index evolution with even the most metric-concerned administrator. 
+5. Note that the last cell of this notebook does not work for me, but may work for you! If you change the `search_query` name from my name and this cell works, you can conceivable complete item 2 in this list much more easily than the manual way I have done it through the years. I will continue to develop this once I figure out why it doesn't always work (generating a key error for me and for others I know, but working for many as well!)
+
 
