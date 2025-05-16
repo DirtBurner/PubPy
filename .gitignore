@@ -1,3 +1,9 @@
+#Ignore all Jupyter notebooks
 *.ipynb
+#Except the the demo template
+!Demo_Notebook.ipynb
+#Ignore those annoying .pyc and __pycache__/ files that show up sometimes;
 *.pyc
 __pycache__/
+#Don't ignore the gitignore file. 
+!.gitignore
